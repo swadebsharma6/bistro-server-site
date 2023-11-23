@@ -35,9 +35,17 @@ async function run() {
 
     const usersCollection = client.db("bistroDb").collection('users');
 
-    // middleware
 
 
+
+    // jwt related Api
+    app.post('/jwt', async(req, res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
+      res.send({token})
+    })
+
+        // middleware
     // verify token
     const verifyToken = (req, res, next)=>{
       console.log('inside verify token', req.headers.authorization);
@@ -67,14 +75,6 @@ async function run() {
       next();
     }
 
-
-
-    // jwt related Api
-    app.post('/jwt', async(req, res)=>{
-      const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'});
-      res.send({token})
-    })
 
 
     // user related Api
@@ -141,6 +141,12 @@ async function run() {
         const cursor = menuCollection.find();
         const result = await cursor.toArray();
         res.send(result);
+    })
+
+    app.post('/menu', verifyToken, verifyAdmin, async(req, res)=>{
+      const item = req.body;
+      const result = await menuCollection.insertOne(item);
+      res.send(result)
     })
 
     app.get('/reviews', async(req, res)=>{
